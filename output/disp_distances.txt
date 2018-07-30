@@ -1,0 +1,18 @@
+1248d.png
+original disparity image:
+>> disparity_color
+dist(m): 23.463
+dist(m): 23.7171
+dist(m): 24.1383
+dist(m): 23.8027
+dist(m): 22.9028
+
+1248d_planefitted.png
+plane fitted disparity image:
+>> disparity_color
+dist(m): 23.4862
+dist(m): 23.7071
+dist(m): 24.189
+dist(m): 23.9252
+dist(m): 22.8639
+

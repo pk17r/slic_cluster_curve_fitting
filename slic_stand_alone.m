@@ -15,7 +15,7 @@ img_num = 1248;
 input_folder = 'input/';
 output_folder = 'output/';
 img = imread(strcat(input_folder,num2str(img_num),'i.png'));
-K = 64;
+K = 256;
 compactness = 40;
 E_threshold = 5;
 
@@ -166,8 +166,8 @@ for iter = 1: numIter
     end
     
 %     %visualize:
-    cIndMap = label_map';
-    [gx, gy] = gradient(cIndMap);
+    cIndMap1 = label_map';
+    [gx, gy] = gradient(cIndMap1);
     bMap = (gx.^2 + gy.^2) > 0;
     imgVis = img;
     imgVis(cat(3, bMap, bMap, bMap)) = 1;
@@ -178,17 +178,37 @@ for iter = 1: numIter
     end
 end
 
-imwrite(imgVis,strcat(output_folder,num2str(img_num),'_segmented.png'));
+imwrite(imgVis,strcat(output_folder,num2str(img_num),'i_segmented.png'));
 
-%% 3) Combine nearby clusters
+%% 3) Combine similar clusters
 
-cluster_D_threshold = 14.6;
-C2 = zeros(K,3);
+cluster_D_threshold = 4; % 14.6
+C2 = zeros(K,6);
 C2(:,1:3) = C(:,1:3);
+
+% calculate std. div. in a cluster
+for i=1:K
+    [Yc,Xc] = find(cIndMap1 == i);
+    l = zeros(length(Xc),1);
+    a = l;
+    b = l;
+    for j=1:length(Xc)
+        l(j) = imgLab(Yc(j),Xc(j),1);
+        a(j) = imgLab(Yc(j),Xc(j),2);
+        b(j) = imgLab(Yc(j),Xc(j),3);
+    end
+    lstd = std(l);
+    astd = std(a);
+    bstd = std(b);
+    C2(i,4) = lstd/2;
+    C2(i,5) = astd/2;
+    C2(i,6) = bstd/2;
+end
+
 K2 = K;
 clusters_combined = 0;
 C_parent = [1:K2];
-C3 = zeros(K2,3);
+C3 = zeros(K2,6);
 label_map2 = label_map;
 new_cluster_index = 1;
 [Idx, dis] = knnsearch(C2,C2,'Distance','euclidean','K',K2);
@@ -208,22 +228,40 @@ for i=1:K2
     C3(new_cluster_index,1) = mean(C2(nearby_clusters,1));
     C3(new_cluster_index,2) = mean(C2(nearby_clusters,2));
     C3(new_cluster_index,3) = mean(C2(nearby_clusters,3));
+    l2 = [];
+    a2 = [];
+    b2 = [];
     for j = 1:length(nearby_clusters)
         [Xc,Yc] = find(label_map2 == nearby_clusters(j));
+        l = zeros(length(Xc),1);
+        a = l;
+        b = l;
         for p=1:length(Xc)
             label_map2(Xc(p),Yc(p)) = new_cluster_index;
+            l(p) = imgLab(Yc(p),Xc(p),1);
+            a(p) = imgLab(Yc(p),Xc(p),2);
+            b(p) = imgLab(Yc(p),Xc(p),3);
         end
+        l2 = [l2; l];
+        a2 = [a2; a];
+        b2 = [b2; b];
     end
+    lstd = std(l2);
+    astd = std(a2);
+    bstd = std(b2);
+    C3(new_cluster_index,4) = lstd/2;
+    C3(new_cluster_index,5) = astd/2;
+    C3(new_cluster_index,6) = bstd/2;
     clusters_combined = clusters_combined + length(nearby_clusters) - 1;
     new_cluster_index = new_cluster_index + 1;
 end
 K2 = new_cluster_index - 1;
-C2 = C3(1:new_cluster_index-1,:);
-C3 = zeros(K2,3);
+%C2 = C3(1:new_cluster_index-1,:);
+%C4 = zeros(K2,3);
 C_parent = [1:K2];
 
 % renumbering the cluster labels and removing noise
-P = 100;
+P = 10;
 size_label_map2 = size(label_map2);
 label_map_no_noise = zeros(size_label_map2(1),size_label_map2(2));
 new_cluster_index = 1;
@@ -254,9 +292,10 @@ imgVis(cat(3, bMap, bMap, bMap)) = 1;
 figure(3), imshow(imgVis)
 cIndMap = uint16(cIndMap);
 
-imwrite(imgVis,strcat(output_folder,num2str(img_num),'_segment_clustered.png'));
+imwrite(imgVis,strcat(output_folder,num2str(img_num),'i_segment_clustered.png'));
 
 imwrite(cast(label_map_no_noise','uint8'),strcat(output_folder,num2str(img_num),'_segment_map.png'));
+imwrite(cast(label_map_no_noise','uint8'),strcat('/home/pkr/pkr-work/pose/build/segmentlabels/',num2str(img_num),'.png'));
 
 % plane fitting and re-computing disparity
 % *200 to be used as input in segmented image in C++ pose app

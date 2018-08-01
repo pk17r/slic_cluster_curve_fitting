@@ -16,8 +16,8 @@ input_folder = 'input/';
 output_folder = 'output/';
 img = imread(strcat(input_folder,num2str(img_num),'i.png'));
 K = 256;
-compactness = 40;
-E_threshold = 5;
+compactness = 30;   %40
+E_threshold = 10;
 
 tic;
 % Input data
@@ -172,6 +172,7 @@ for iter = 1: numIter
     imgVis = img;
     imgVis(cat(3, bMap, bMap, bMap)) = 1;
     figure(2), imshow(imgVis)
+    display(strcat('pass: ',num2str(iter),', E: ',num2str(E)));
     
     if or(E2 == E, E < E_threshold)
         break;
@@ -182,7 +183,7 @@ imwrite(imgVis,strcat(output_folder,num2str(img_num),'i_segmented.png'));
 
 %% 3) Combine similar clusters
 
-cluster_D_threshold = 4; % 14.6
+cluster_D_threshold = 2.5; % 14.6
 C2 = zeros(K,6);
 C2(:,1:3) = C(:,1:3);
 
@@ -327,7 +328,7 @@ for i=1:size_C2(1)
     % https://www.mathworks.com/matlabcentral/answers/355500-plane-fit-z-ax-by-c-to-3d-point-data
     %B = [ones(counts,1), yourData(:,1:2)] \ yourData(:,3);
     A = [Xc_counts, Yc_counts, ones(counts,1)];
-    B = A \ Zc_counts
+    B = A \ Zc_counts;
     
     for p=1:length(Xc)
         imgd(Xc(p),Yc(p)) = (B(1) * Xc(p) + B(2) * Yc(p) + B(3)) * 200;

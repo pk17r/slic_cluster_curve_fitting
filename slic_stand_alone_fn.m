@@ -1,3 +1,5 @@
+function slic_stand_alone_fn(img_num)
+
 %% Implementation of Simple Linear Iterative Clustering (SLIC)
 %
 % Input:
@@ -11,9 +13,10 @@
 %   - imgVis:  the input image overlaid with the segmentation
 
 % Put your SLIC implementation here
-% 1260, 1264, 1266, 1268, 1370, 1373, 1377, 1380, 1383, 1390, 1420, 1425, 
+% 1248, 1251, 1255, 1260, 1264, 1266, 1268, 1370, 1373, 1377, 1380, 1383, 1390, 1420, 1425, 
 % 1428, 1430, 1488, 1491, 1493, 1496, 1498, 1501, 1503, 1506, 1508, 1510, 1512
-img_num = 1392
+% img_num = 1428
+display(img_num)
 input_folder = 'input/';
 inp_img_fold = '/mnt/win/WORK/kentland19jul/22m_extracted_data/left_rect/';
 inp_disp_fold = '/mnt/win/WORK/kentland19jul/22m_extracted_data/disparities/';
@@ -184,6 +187,7 @@ for iter = 1: numIter
 end
 
 % figure(2), imshow(imgVis);
+% title(num2str(img_num));
 imwrite(imgVis,strcat(output_folder,num2str(img_num),'_segmented.png'));
 
 %% 3) Combine similar clusters
@@ -297,6 +301,7 @@ imgVis = img;
 imgVis(cat(3, bMap, bMap, bMap)) = 1;
 %figure(1), imshow(img)
 figure(3), imshow(imgVis)
+title(num2str(img_num));
 cIndMap = uint16(cIndMap);
 
 imwrite(imgVis,strcat(output_folder,num2str(img_num),'_segments_joined.png'));

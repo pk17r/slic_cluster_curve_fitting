@@ -1,6 +1,6 @@
 function slic_stand_alone_fn(img_num)
 
-%% Implementation of Simple Linear Iterative Clustering (SLIC)
+% Implementation of Simple Linear Iterative Clustering (SLIC)
 %
 % Input:
 %   - img: input color image
@@ -17,10 +17,25 @@ function slic_stand_alone_fn(img_num)
 % 1428, 1430, 1488, 1491, 1493, 1496, 1498, 1501, 1503, 1506, 1508, 1510, 1512
 % img_num = 1428
 display(img_num)
-input_folder = 'input/';
 inp_img_fold = '/mnt/win/WORK/kentland19jul/22m_extracted_data/left_rect/';
 inp_disp_fold = '/mnt/win/WORK/kentland19jul/22m_extracted_data/disparities/';
 output_folder = 'output/';
+output_folder2 = '/home/pkr/pkr-work/pose_estimation/build/segmentlabels/';
+if exist(strcat(output_folder2,num2str(img_num),'.png'), 'file')
+    display('segmented map already exists');
+    return;
+end
+disp_img = imread(strcat(inp_disp_fold,num2str(img_num),'.png'));
+disp_img_cutout = disp_img(101:620,161:1180);
+disp_img_cutout = cast(disp_img_cutout,'double');
+disp_img_cutout = disp_img_cutout(:);
+disp_img_cutout_var = var(disp_img_cutout)
+if disp_img_cutout_var > 10
+    display('var in disparity > 10');
+    return;
+end
+clear disp_img_cutout_var disp_img_cutout disp_img
+
 img = imread(strcat(inp_img_fold,num2str(img_num),'.png'));
 K = 1024;
 compactness = 20;   %40
@@ -302,49 +317,8 @@ imgVis(cat(3, bMap, bMap, bMap)) = 1;
 %figure(1), imshow(img)
 figure(3), imshow(imgVis)
 title(num2str(img_num));
-cIndMap = uint16(cIndMap);
 
 imwrite(imgVis,strcat(output_folder,num2str(img_num),'_segments_joined.png'));
 
 % imwrite(cast(label_map_no_noise','uint8'),strcat(output_folder,num2str(img_num),'_segment_map.png'));
-imwrite(cast(label_map_no_noise','uint8'),strcat('/home/pkr/pkr-work/pose_estimation/build/segmentlabels/',num2str(img_num),'.png'));
-
-% plane fitting and re-computing disparity
-% *200 to be used as input in segmented image in C++ pose app
-
-imgd = imread(strcat(inp_disp_fold,num2str(img_num),'.png'));
-imgd = cast(imgd, 'uint16');
-size_C2 = size(C2);
-
-for i=1:size_C2(1)
-    [Xc,Yc] = find(label_map_no_noise' == i);
-    Zp = zeros(length(Xc),1);
-    Xp = Zp;
-    Yp = Zp;
-    counts = 1;
-    for p=1:length(Xc)
-        if Xc(p) > 20 && Xc(p) < 700 && Yc(p) > 160 && Yc(p) < 1260
-            Zp(counts) = imgd(Xc(p),Yc(p));
-            Xp(counts) = Xc(p);
-            Yp(counts) = Yc(p);
-            counts = counts + 1;
-        end
-    end
-    counts = counts - 1;
-    Zc_counts = Zp(1:counts);
-    Xc_counts = Xp(1:counts);
-    Yc_counts = Yp(1:counts);
-    %z = ceil(mean(Zc_counts));
-
-    % https://www.mathworks.com/matlabcentral/answers/355500-plane-fit-z-ax-by-c-to-3d-point-data
-    %B = [ones(counts,1), yourData(:,1:2)] \ yourData(:,3);
-    A = [Xc_counts, Yc_counts, ones(counts,1)];
-    B = A \ Zc_counts;
-    
-    for p=1:length(Xc)
-        imgd(Xc(p),Yc(p)) = (B(1) * Xc(p) + B(2) * Yc(p) + B(3)) * 200;
-    end
-end
-
-
-% imwrite(imgd, strcat(output_folder,num2str(img_num),'d_planefitted.png'));
+imwrite(cast(label_map_no_noise','uint8'),strcat(output_folder2,num2str(img_num),'.png'));

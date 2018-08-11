@@ -25,22 +25,13 @@ if exist(strcat(output_folder2,num2str(img_num),'.png'), 'file')
     display('segmented map already exists');
     return;
 end
-if ~exist(strcat(inp_disp_fold,num2str(img_num),'.png'), 'file')
-    display('disparity image does not exist');
-    return;
-end
-disp_img = imread(strcat(inp_disp_fold,num2str(img_num),'.png'));
-disp_img_cutout = disp_img(101:620,161:1180);
-disp_img_cutout = cast(disp_img_cutout,'double');
-disp_img_cutout = disp_img_cutout(:);
-disp_img_cutout_var = var(disp_img_cutout)
+disp_img=imread(strcat(inp_disp_fold,num2str(img_num),'.png'));
+disp_img_cutout=disp_img(101:620,161:1180);
+disp_img_cutoutd = cast(bad2,'double');
+disp_img_cutout2d = disp_img_cutout(:);
+disp_img_cutout_var = var(disp_img_cutout2d)
 if disp_img_cutout_var > 10
     display('var in disparity > 10');
-    return;
-end
-clear disp_img_cutout_var disp_img_cutout disp_img
-if ~exist(strcat(inp_img_fold,num2str(img_num),'.png'), 'file')
-    display('left image does not exist');
     return;
 end
 
